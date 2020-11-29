@@ -1,90 +1,89 @@
 <template lang="pug">
-  v-app.app(dark)
-    .app-container.rounded-xl
-      .header
-        .header-title.d-flex
-          v-icon.mr-2(x-large) mdi-cpu-32-bit
-          | MIPS Simulator
-        v-spacer
-        div.header-actions
-          v-btn.mr-4(fab @click="step" color="orange darken-2")
-            v-icon(large) mdi-debug-step-over
-          v-btn(fab @click="go" color="blue darken-2")
-            v-icon(large) mdi-play
-      v-container.h-100(fluid)
-        v-row(style="height: calc(100vh - 17rem)")
-          v-col.h-100(cols="4")
-            v-card.card.h-100.rounded-xl(elevation="4")
-              v-card-title.card-title
-                div 명령어
-                v-spacer
-                div.mr-2
-                  v-menu(rounded offset-y)
-                    template(v-slot:activator="{ attrs, on }")
-                      v-btn(icon v-on="on" v-bind="attrs")
-                        v-icon(medium) mdi-format-list-bulleted-square
-                    v-list
-                      v-list-item(v-for="file in presetFiles" :key="file.name" link @click="loadFile(file.url)")
-                        v-list-item-title(v-text="file.name")
-                div
-                  v-btn(icon @click="openFile")
-                    v-icon(medium) mdi-file-plus
+.app-container.rounded-xl
+  .header
+    .header-title.d-flex
+      v-icon.mr-2(x-large) mdi-cpu-32-bit
+      | MIPS Simulator
+    v-spacer
+    div.header-actions
+      v-btn.mr-4(fab @click="step" color="red")
+        v-icon(large) mdi-debug-step-over
+      v-btn(fab @click="go" color="primary")
+        v-icon(large) mdi-play
+  v-container.h-100(fluid)
+    v-row(style="height: calc(100vh - 17rem)")
+      v-col.h-100(cols="4")
+        v-card.card.h-100.rounded-xl(elevation="4")
+          v-card-title.card-title
+            div 명령어
+            v-spacer
+            div.mr-2
+              v-menu(rounded offset-y)
+                template(v-slot:activator="{ attrs, on }")
+                  v-btn(icon v-on="on" v-bind="attrs")
+                    v-icon(medium) mdi-format-list-bulleted-square
+                v-list
+                  v-list-item(v-for="file in presetFiles" :key="file.name" link @click="loadFile(file.url)")
+                    v-list-item-title(v-text="file.name")
+            div
+              v-btn(icon @click="openFile")
+                v-icon(medium) mdi-file-plus
 
+          v-card-text.code.card-text
+            .d-flex.pa-2(
+              v-for="(instruction, i) in instructions" :key="i"
+              :class="{ running: instruction.address === register.PC }")
+              v-checkbox.breakpoint.ma-0.pa-0(v-model="breakPoints[instruction.address]")
+              div.mr-3  [{{ formatHex(instruction.address) }}]
+              div.mr-3  {{ formatHex(instruction.word) }}
+              div.font-weight-bold {{ instruction.decoded }}
+
+      v-col.h-100(cols="2")
+        v-card.h-100.card.rounded-xl(elevation="4")
+          v-card-title.card-title 레지스터
+          v-card-text.code.card-text
+            div(v-for="(reg, i) in register.entries()" :key="i")
+              .d-flex(:class="{ changed: registerChanged[reg.name]}")
+                div.w-100 {{ reg.name }}
+                div.w-100 {{ reg.value }}
+
+      v-col.h-100.d-flex.flex-column(cols="6")
+        v-row.h-50.ma-0
+          v-col.h-100.pa-0.mr-3
+            v-card.card.rounded-xl.mb-5(elevation="4")
+              v-card-title.card-title 데이터
               v-card-text.code.card-text
-                .d-flex.pa-2(
-                  v-for="(instruction, i) in instructions" :key="i"
-                  :class="{ running: instruction.address === register.PC }")
-                  v-checkbox.breakpoint.ma-0.pa-0(v-model="breakPoints[instruction.address]")
-                  div.mr-3  [{{ formatHex(instruction.address) }}]
-                  div.mr-3  {{ formatHex(instruction.word) }}
-                  div.font-weight-bold {{ instruction.decoded }}
+                .d-flex(v-for="(word, i) in dataMemory()" :key="i")
+                  div(v-if="i === 2" style="height: 4px;")
+                  div.pr-2 [{{ word.address.toString(16) }}]
+                  div 0x{{ formatHex(word.word) }}({{word.word >> 0}})
 
-          v-col.h-100(cols="2")
-            v-card.h-100.card.rounded-xl(elevation="4")
-              v-card-title.card-title 레지스터
-              v-card-text.code.card-text
-                div(v-for="(reg, i) in register.entries()" :key="i")
-                  .d-flex(:class="{ changed: registerChanged[reg.name]}")
-                    div.w-100 {{ reg.name }}
-                    div.w-100 {{ reg.value }}
+          v-col.h-100.pa-0.ml-3
+            v-card.card.rounded-xl.mb-5(elevation="4")
+              v-card-title.card-title 스택
+              v-card-text.code.card-text.stack-data
+                .d-flex(v-for="(word, i) in stackMemory()" :key="i")
+                  div.pr-2 [{{ word.address.toString(16) }}]
+                  div 0x{{ formatHex(word.word) }}({{word.word >> 0}})
 
-          v-col.h-100.d-flex.flex-column(cols="6")
-            v-row.h-50.ma-0
-              v-col.h-100.pa-0.mr-3
-                v-card.card.rounded-xl.mb-5(elevation="4")
-                  v-card-title.card-title 데이터
-                  v-card-text.code.card-text
-                    .d-flex(v-for="(word, i) in dataMemory()" :key="i")
-                      div(v-if="i === 2" style="height: 4px;")
-                      div.pr-2 [{{ word.address.toString(16) }}]
-                      div 0x{{ formatHex(word.word) }}({{word.word >> 0}})
-
-              v-col.h-100.pa-0.ml-3
-                v-card.card.rounded-xl.mb-5(elevation="4")
-                  v-card-title.card-title 스택
-                  v-card-text.code.card-text.stack-data
-                    .d-flex(v-for="(word, i) in stackMemory()" :key="i")
-                      div.pr-2 [{{ word.address.toString(16) }}]
-                      div 0x{{ formatHex(word.word) }}({{word.word >> 0}})
-
-            v-row.h-50.ma-0.pt-5
-              v-card.h-100.card.rounded-xl(elevation="4")
-                v-card-title.card-title 콘솔
-                v-card-text.code.card-text(ref="consoleOutput")
-                  pre.pl-2(v-for="(output, i) in stdout.outputs" :key="i" :style="`color: ${output.color}`")
-                    | {{ output.text }}
-                v-card-text
-                  v-text-field(
-                    v-model="consoleInput"
-                    @keydown.enter="onConsoleInput"
-                    placeholder="명령어를 입력하세요. (help로 명령어 목록 보기)" filled)
-        input.hidden(type="file" ref="file" @change="onFile")
-        v-snackbar(v-model="snackbar")
-          | {{ snackbarText }}
-          template(v-slot:action="{ attrs }")
-            v-btn(text @click="snackbar = false, continueGo(register.PC)" v-bind="attrs") 계속
-            v-btn(text @click="snackbar = false, continueStep()" v-bind="attrs") 한 단계
-            v-btn(text @click="snackbar = false" v-bind="attrs") 취소
+        v-row.h-50.ma-0.pt-5
+          v-card.h-100.card.rounded-xl(elevation="4")
+            v-card-title.card-title 콘솔
+            v-card-text.code.card-text(ref="consoleOutput")
+              pre.pl-2(v-for="(output, i) in stdout.outputs" :key="i" :style="`color: ${output.color}`")
+                | {{ output.text }}
+            v-card-text
+              v-text-field(
+                v-model="consoleInput"
+                @keydown.enter="onConsoleInput"
+                placeholder="명령어를 입력하세요. (help로 명령어 목록 보기)" filled)
+    input.hidden(type="file" ref="file" @change="onFile")
+    v-snackbar(v-model="snackbar")
+     | {{ snackbarText }}
+     template(v-slot:action="{ attrs }")
+      v-btn(text @click="snackbar = false, continueGo(register.PC)" v-bind="attrs") 계속
+      v-btn(text @click="snackbar = false, continueStep()" v-bind="attrs") 한 단계
+      v-btn(text @click="snackbar = false" v-bind="attrs") 취소
 </template>
 
 <script lang="ts">
@@ -398,13 +397,7 @@ export default class Instruction extends Vue {
 }
 </script>
 
-<style lang="scss">
-.app {
-  background-image: url('/background.jpg') !important;
-  background-repeat: no-repeat;
-  background-size: cover !important;
-}
-
+<style lang="scss" scoped>
 .w-100 {
   width: 100%;
 }
@@ -463,20 +456,20 @@ export default class Instruction extends Vue {
   height: 100%;
   width: 100%;
   background: rgba($color: #000000, $alpha: 0.7) !important;
-  display: flex !important;
+  display: flex;
   flex-direction: column;
 
   &-title {
     font-weight: bold;
     font-size: 1.4rem;
-    margin: 0.8rem 0.8rem 0 0.8rem !important;
-    padding-bottom: 0 !important;
+    margin: 0.8rem 0.8rem 0 0.8rem;
+    padding-bottom: 0;
   }
 
   &-text {
     overflow-y: auto;
     scrollbar-width: thin;
-    width: calc(100% - 0.8rem) !important;
+    width: calc(100% - 0.8rem);
     height: 100%;
     margin: 0.8rem;
   }
@@ -490,37 +483,5 @@ export default class Instruction extends Vue {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-}
-
-.action {
-  text-align: center;
-  padding: 32px 0;
-  font-size: 2rem;
-  cursor: pointer;
-  font-weight: bold;
-
-  &.first {
-    background: linear-gradient(
-      35deg,
-      rgba(244, 101, 114, 1) 0%,
-      rgba(253, 162, 145, 1) 100%
-    );
-  }
-
-  &.second {
-    background: linear-gradient(
-      35deg,
-      rgba(255, 177, 42, 1) 0%,
-      rgba(255, 209, 95, 1) 100%
-    );
-  }
-
-  &.third {
-    background: linear-gradient(
-      35deg,
-      rgba(88, 119, 228, 1) 0%,
-      rgba(197, 178, 249, 1) 100%
-    );
-  }
 }
 </style>
