@@ -1,24 +1,5 @@
-# mips
+# MIPS Simulator in Vue
 
-## Project setup
-```
-yarn install
-```
+![image](https://user-images.githubusercontent.com/22253556/100544405-c830ef00-3298-11eb-8ef2-dcbd13cc1ea4.png)
 
-### Compiles and hot-reloads for development
-```
-yarn serve
-```
-
-### Compiles and minifies for production
-```
-yarn build
-```
-
-### Lints and fixes files
-```
-yarn lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+링크: https://mips.surge.sh
