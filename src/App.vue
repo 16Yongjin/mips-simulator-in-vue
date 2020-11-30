@@ -13,7 +13,7 @@
           )
           register-panel(:registerChanged="registerChanged")
           v-col.h-100.d-flex.flex-column(cols="6")
-            memory-panel(:dataCount="dataCount")
+            memory-panel(:dataCount="dataCount" :key="register.PC")
             console-panel(v-model="consoleInput" @consoleEnter="onConsoleInput")
 
         input.hidden(type="file" ref="file" @change="onFile")

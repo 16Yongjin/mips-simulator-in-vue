@@ -30,6 +30,8 @@ export default class MemoryPanel extends Vue {
   @Prop(Number)
   dataCount!: number
 
+  register = register
+
   dataMemory() {
     const words = []
     const address = 0x10000000
@@ -43,7 +45,7 @@ export default class MemoryPanel extends Vue {
 
   stackMemory() {
     const words = []
-    const sp = register.R[29]
+    const sp = this.register.SP
     if (sp >> 20 !== 0x7ff) return []
 
     const stackEnd = 0x80000000
