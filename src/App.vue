@@ -1,83 +1,21 @@
 <template lang="pug">
   v-app.app(dark)
     .app-container.rounded-xl
-      .header
-        .header-title.d-flex
-          v-icon.mr-2(x-large) mdi-cpu-32-bit
-          | MIPS Simulator
-        v-spacer
-        div.header-actions
-          v-btn.mr-4(fab @click="step" color="orange darken-2")
-            v-icon(large) mdi-debug-step-over
-          v-btn(fab @click="go" color="blue darken-2")
-            v-icon(large) mdi-play
+      app-header(@step="step" @go="go")
       v-container.h-100(fluid)
-        v-row(style="height: calc(100vh - 17rem)")
-          v-col.h-100(cols="4")
-            v-card.card.h-100.rounded-xl(elevation="4")
-              v-card-title.card-title
-                div 명령어
-                v-spacer
-                div.mr-2
-                  v-menu(rounded offset-y)
-                    template(v-slot:activator="{ attrs, on }")
-                      v-btn(icon v-on="on" v-bind="attrs")
-                        v-icon(medium) mdi-format-list-bulleted-square
-                    v-list
-                      v-list-item(v-for="file in presetFiles" :key="file.name" link @click="loadFile(file.url)")
-                        v-list-item-title(v-text="file.name")
-                div
-                  v-btn(icon @click="openFile")
-                    v-icon(medium) mdi-file-plus
-
-              v-card-text.code.card-text
-                .d-flex.pa-2(
-                  v-for="(instruction, i) in instructions" :key="i"
-                  :class="{ running: instruction.address === register.PC }")
-                  v-checkbox.breakpoint.ma-0.pa-0(v-model="breakPoints[instruction.address]")
-                  div.mr-3  [{{ formatHex(instruction.address) }}]
-                  div.mr-3  {{ formatHex(instruction.word) }}
-                  div.font-weight-bold {{ instruction.decoded }}
-
-          v-col.h-100(cols="2")
-            v-card.h-100.card.rounded-xl(elevation="4")
-              v-card-title.card-title 레지스터
-              v-card-text.code.card-text
-                div(v-for="(reg, i) in register.entries()" :key="i")
-                  .d-flex(:class="{ changed: registerChanged[reg.name]}")
-                    div.w-100 {{ reg.name }}
-                    div.w-100 {{ reg.value }}
-
+        v-row(style="height: calc(100vh - 16rem)")
+          instruction-panel(
+            :breakPoints="breakPoints"
+            :presetFiles="presetFiles"
+            :instructions="instructions"
+            @loadFile="loadFile"
+            @openFile="openFile"
+          )
+          register-panel(:registerChanged="registerChanged")
           v-col.h-100.d-flex.flex-column(cols="6")
-            v-row.h-50.ma-0
-              v-col.h-100.pa-0.mr-3
-                v-card.card.rounded-xl.mb-5(elevation="4")
-                  v-card-title.card-title 데이터
-                  v-card-text.code.card-text
-                    .d-flex(v-for="(word, i) in dataMemory()" :key="i")
-                      div(v-if="i === 2" style="height: 4px;")
-                      div.pr-2 [{{ word.address.toString(16) }}]
-                      div 0x{{ formatHex(word.word) }}({{word.word >> 0}})
+            memory-panel(:dataCount="dataCount")
+            console-panel(v-model="consoleInput" @consoleEnter="onConsoleInput")
 
-              v-col.h-100.pa-0.ml-3
-                v-card.card.rounded-xl.mb-5(elevation="4")
-                  v-card-title.card-title 스택
-                  v-card-text.code.card-text.stack-data
-                    .d-flex(v-for="(word, i) in stackMemory()" :key="i")
-                      div.pr-2 [{{ word.address.toString(16) }}]
-                      div 0x{{ formatHex(word.word) }}({{word.word >> 0}})
-
-            v-row.h-50.ma-0.pt-5
-              v-card.h-100.card.rounded-xl(elevation="4")
-                v-card-title.card-title 콘솔
-                v-card-text.code.card-text(ref="consoleOutput")
-                  pre.pl-2(v-for="(output, i) in stdout.outputs" :key="i" :style="`color: ${output.color}`")
-                    | {{ output.text }}
-                v-card-text
-                  v-text-field(
-                    v-model="consoleInput"
-                    @keydown.enter="onConsoleInput"
-                    placeholder="명령어를 입력하세요. (help로 명령어 목록 보기)" filled)
         input.hidden(type="file" ref="file" @change="onFile")
         v-snackbar(v-model="snackbar")
           | {{ snackbarText }}
@@ -85,12 +23,19 @@
             v-btn(text @click="snackbar = false, continueGo(register.PC)" v-bind="attrs") 계속
             v-btn(text @click="snackbar = false, continueStep()" v-bind="attrs") 한 단계
             v-btn(text @click="snackbar = false" v-bind="attrs") 취소
+    .credit
+      | 20-2 Computer Architecture Team 3 조용진, 김상우, 오석진
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import Component from 'vue-class-component'
-import { Watch } from 'vue-property-decorator'
+import AppHeader from '@/components/AppHeader.vue'
+import BreakPoint from '@/components/BreakPoint.vue'
+import ConsolePanel from '@/components/ConsolePanel.vue'
+import MemoryPanel from '@/components/MemoryPanel.vue'
+import RegisterPanel from '@/components/RegisterPanel.vue'
+import InstructionPanel from '@/components/InstructionPanel.vue'
 import { printDecode, decode } from '@/simulator/decode'
 import { register } from '@/simulator/register'
 import { memory } from '@/simulator/memory'
@@ -103,7 +48,17 @@ interface InstructionInfo {
   decoded: string
 }
 
-@Component({ name: 'Instruction' })
+@Component({
+  name: 'Instruction',
+  components: {
+    AppHeader,
+    BreakPoint,
+    ConsolePanel,
+    MemoryPanel,
+    RegisterPanel,
+    InstructionPanel
+  }
+})
 export default class Instruction extends Vue {
   instructions = [] as InstructionInfo[]
 
@@ -131,33 +86,6 @@ export default class Instruction extends Vue {
     { name: 'as_ex03_ifelse.bin', url: '/3.bin' },
     { name: 'as_ex04_fct.bin', url: '/4.bin' }
   ]
-
-  dataMemory() {
-    const words = []
-    const address = 0x10000000
-    for (let i = 0; i < this.dataCount; i++) {
-      const word = memory.getWord(address + 4 * i)
-      words.push({ address: address + 4 * i, word })
-    }
-
-    return words
-  }
-
-  stackMemory() {
-    const words = []
-    const sp = this.register.R[29]
-    if (sp >> 20 !== 0x7ff) return []
-
-    const stackEnd = 0x80000000
-    for (let address = sp; address < stackEnd; address += 4) {
-      console.log(address.toString(16))
-      const word = memory.getWord(address)
-      words.unshift({ address, word })
-    }
-    console.log('stack', words)
-
-    return words
-  }
 
   step() {
     const breakPoint = this.breakPoints[this.register.PC]
@@ -267,19 +195,6 @@ export default class Instruction extends Vue {
     this.registerChanged = {}
   }
 
-  @Watch('stdout.outputs')
-  async onStdOutChange() {
-    await this.$nextTick()
-    this.scrollDownConsole()
-  }
-
-  scrollDownConsole() {
-    const consoleOutput = this.$refs.consoleOutput as Element
-    if (consoleOutput) {
-      consoleOutput.scrollTo(0, consoleOutput.scrollHeight)
-    }
-  }
-
   async onConsoleInput() {
     const input = this.consoleInput.toString()
     if (!input) return
@@ -287,7 +202,6 @@ export default class Instruction extends Vue {
     stdout.print(input)
     this.repl(input)
     this.consoleInput = ''
-    this.scrollDownConsole()
   }
 
   formatHex(number: number) {
@@ -391,7 +305,7 @@ export default class Instruction extends Vue {
   }
 
   async mounted() {
-    const response = await fetch('./1.bin')
+    const response = await fetch('/1.bin')
     const binary = await response.arrayBuffer()
     this.readBinray(binary)
   }
@@ -418,7 +332,7 @@ export default class Instruction extends Vue {
 }
 
 .app-container {
-  margin: 4rem;
+  margin: 3rem;
   padding: 1rem;
   background: rgba($color: #000000, $alpha: 0.5) !important;
 }
@@ -456,7 +370,6 @@ export default class Instruction extends Vue {
 
 .code {
   font-family: monospace;
-  font-size: 1rem;
 }
 
 .card {
@@ -474,11 +387,13 @@ export default class Instruction extends Vue {
   }
 
   &-text {
+    position: relative;
     overflow-y: auto;
     scrollbar-width: thin;
-    width: calc(100% - 0.8rem) !important;
-    height: 100%;
-    margin: 0.8rem;
+    scrollbar-color: rgba($color: #fff, $alpha: 0.3) transparent;
+    height: calc(100% - 1.6rem);
+    padding: 1.5rem;
+    margin: 0.8rem 0;
   }
 }
 
@@ -492,35 +407,9 @@ export default class Instruction extends Vue {
   justify-content: flex-end;
 }
 
-.action {
-  text-align: center;
-  padding: 32px 0;
-  font-size: 2rem;
-  cursor: pointer;
-  font-weight: bold;
-
-  &.first {
-    background: linear-gradient(
-      35deg,
-      rgba(244, 101, 114, 1) 0%,
-      rgba(253, 162, 145, 1) 100%
-    );
-  }
-
-  &.second {
-    background: linear-gradient(
-      35deg,
-      rgba(255, 177, 42, 1) 0%,
-      rgba(255, 209, 95, 1) 100%
-    );
-  }
-
-  &.third {
-    background: linear-gradient(
-      35deg,
-      rgba(88, 119, 228, 1) 0%,
-      rgba(197, 178, 249, 1) 100%
-    );
-  }
+.credit {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
 }
 </style>

@@ -1,6 +1,6 @@
 # MIPS Simulator in Vue
 
-![image](https://user-images.githubusercontent.com/22253556/100544476-3aa1cf00-3299-11eb-9e62-d194182a9de9.png)
+![image](https://user-images.githubusercontent.com/22253556/100621200-b9167380-3362-11eb-8329-62ec84c7e620.png)
 
 링크: https://mips.surge.sh
 
