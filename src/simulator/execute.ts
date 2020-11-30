@@ -222,7 +222,7 @@ export const instructionFetch = () => {
   return instruction
 }
 
-// 명령어 한 단계 씩 실행. s 명령어 입력 시 실행됨
+// 명령어 한 단계씩 실행. s 명령어 입력 시 실행됨
 export const stepProgram = () => {
   // TODO: 명렁어 하나만 실행
   // 1. Instruction Fetch: 명령어 가져오기
