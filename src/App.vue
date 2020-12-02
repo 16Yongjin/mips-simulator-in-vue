@@ -10,6 +10,7 @@
             :instructions="instructions"
             @loadFile="loadFile"
             @openFile="openFile"
+            @write="onUserWrite"
           )
           register-panel(:registerChanged="registerChanged")
           v-col.h-100.d-flex.flex-column(cols="6")
@@ -144,7 +145,6 @@ export default class Instruction extends Vue {
 
   async onFile(e: Event) {
     const file = (e.target as HTMLInputElement).files?.[0]
-    console.log(file)
 
     if (!file) return
 
@@ -156,6 +156,35 @@ export default class Instruction extends Vue {
     const response = await fetch(url)
     const binary = await response.arrayBuffer()
     this.readBinray(binary)
+  }
+
+  onUserWrite({ words, data }: { words: number[]; data: number[] }) {
+    this.readUserInstruction(words, data)
+  }
+
+  readUserInstruction(words: number[], data: number[]) {
+    this.instructionCount = words.length
+    this.dataCount = data.length
+
+    memory.reset()
+    stdout.reset()
+    register.reset()
+    register.PC = 0x400000
+    this.breakPoints = {}
+    this.registerChanged = {}
+    this.instructions = []
+
+    this.instructions = words.map((word, i) => {
+      const address = 0x400000 + 4 * i
+      const decoded = decode(word)
+      memory.setWord(0x400000 + 4 * i, word)
+      const instructionInfo = { word, address, decoded }
+      return instructionInfo
+    })
+
+    data.forEach((word, i) => {
+      memory.setWord(0x10000000 + 4 * i, word)
+    })
   }
 
   readBinray(binary: ArrayBuffer) {
@@ -176,7 +205,7 @@ export default class Instruction extends Vue {
       const word = view.getUint32(4 * (i + 2))
       const address = 0x400000 + 4 * i
       const decoded = decode(word)
-      memory.setWord(0x400000 + 4 * i, word)
+      memory.setWord(address, word)
       const instructionInfo = { word, address, decoded }
       this.instructions.push(instructionInfo)
       printDecode(word)

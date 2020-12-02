@@ -14,12 +14,7 @@ export default class BreakPoint extends Vue {
   value!: boolean
 
   onInput() {
-    console.log(this.value)
     this.$emit('input', !this.value)
-  }
-
-  mounted() {
-    console.log(this.value)
   }
 }
 </script>

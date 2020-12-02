@@ -4,6 +4,8 @@ v-col.h-100(cols="4")
     v-card-title.card-title
       div 명령어
       v-spacer
+      div
+        write-dialog(@write="onUserWrite")
       div.mr-2
         v-menu(rounded offset-y)
           template(v-slot:activator="{ attrs, on }")
@@ -33,8 +35,9 @@ import { register } from '@/simulator/register'
 import { Prop } from 'vue-property-decorator'
 import { InstructionInfo, PresetFile } from '@/types'
 import BreakPoint from '@/components/BreakPoint.vue'
+import WriteDialog from '@/components/WriteDialog.vue'
 
-@Component({ name: 'RegisterPanel', components: { BreakPoint } })
+@Component({ name: 'RegisterPanel', components: { BreakPoint, WriteDialog } })
 export default class RegisterPanel extends Vue {
   @Prop(Object)
   breakPoints!: Record<number, boolean>
@@ -51,6 +54,10 @@ export default class RegisterPanel extends Vue {
 
   openFile() {
     this.$emit('openFile')
+  }
+
+  onUserWrite({ words, data }: { words: number[]; data: number[] }) {
+    this.$emit('write', { words, data })
   }
 
   register = register
