@@ -12,7 +12,7 @@
             @openFile="openFile"
             @write="onUserWrite"
           )
-          register-panel(:registerChanged="registerChanged")
+          register-panel(:registerChanged="registerChanged" @registerEdit="onRegisterEdit")
           v-col.h-100.d-flex.flex-column(cols="6")
             memory-panel(:dataCount="dataCount" :key="Math.random()")
             console-panel(v-model="consoleInput" @consoleEnter="onConsoleInput")
@@ -160,6 +160,12 @@ export default class Instruction extends Vue {
 
   onUserWrite({ words, data }: { words: number[]; data: number[] }) {
     this.readUserInstruction(words, data)
+  }
+
+  onRegisterEdit({ name, value }: { name: string; value: number }) {
+    this.register.saveState()
+    this.register.setByName(name, value)
+    this.registerChanged = this.register.compareState()
   }
 
   readUserInstruction(words: number[], data: number[]) {

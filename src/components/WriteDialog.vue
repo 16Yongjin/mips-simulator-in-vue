@@ -1,5 +1,5 @@
 <template lang="pug">
-v-dialog(v-model='dialog' persistent max-width='600px')
+v-dialog(v-model='dialog' max-width='600px')
   template(v-slot:activator='{ on, attrs }')
     v-btn(icon v-bind='attrs' v-on='on')
       v-icon(medium) mdi-pencil
@@ -35,8 +35,8 @@ import Vue from 'vue'
 import Component from 'vue-class-component'
 import { encode } from '@/simulator/encode'
 
-@Component({ name: 'RegisterPanel' })
-export default class RegisterPanel extends Vue {
+@Component({ name: 'InstructionWriteDialog' })
+export default class InstructionWriteDialog extends Vue {
   dialog = false
 
   encode = encode

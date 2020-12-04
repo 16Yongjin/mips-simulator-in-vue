@@ -4,9 +4,15 @@ v-col.h-100(cols="2")
     v-card-title.card-title 레지스터
     v-card-text.code.card-text
       div(v-for="(reg, i) in register.entries()" :key="i")
-        .d-flex(:class="{ changed: registerChanged[reg.name]}")
+        .d-flex.reg(:class="{ changed: registerChanged[reg.name]}" @click="selectRegister(reg)")
           div.w-100 {{ reg.name }}
           div.w-100 {{ reg.value }}
+  register-edit-dialog(
+    v-model="editDialog"
+    :name="selectedRegisterName"
+    :currentValue="selectedRegisterValue"
+    @close="editDialog = false"
+    @complete="completeEdit")
 </template>
 
 <script lang="ts">
@@ -14,12 +20,40 @@ import Vue from 'vue'
 import Component from 'vue-class-component'
 import { register } from '@/simulator/register'
 import { Prop } from 'vue-property-decorator'
+import RegisterEditDialog from '@/components/RegisterEditDialog.vue'
 
-@Component({ name: 'RegisterPanel' })
+@Component({ name: 'RegisterPanel', components: { RegisterEditDialog } })
 export default class RegisterPanel extends Vue {
   @Prop(Object)
   registerChanged!: Record<string, boolean>
 
   register = register
+
+  editDialog = false
+
+  selectedRegisterName: string | null = null
+
+  selectedRegisterValue: string | null = null
+
+  selectRegister({ name, value }: { name: string; value: number }) {
+    this.selectedRegisterName = name
+    this.selectedRegisterValue = `0x${value}`
+    this.editDialog = true
+  }
+
+  completeEdit(value: object) {
+    this.$emit('registerEdit', value)
+  }
 }
 </script>
+
+<style lang="scss" scoped>
+.reg {
+  cursor: pointer;
+
+  &:hover {
+    background: rgba($color: #fff, $alpha: 0.1) !important;
+    border-radius: 4px;
+  }
+}
+</style>

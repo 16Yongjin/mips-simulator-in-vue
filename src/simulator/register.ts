@@ -49,6 +49,11 @@ class Register {
     this.R[index] = value
   }
 
+  setByName(name: string, value: number) {
+    const index = REGISTER_STR.indexOf(name)
+    this.set(index, value)
+  }
+
   entries() {
     return [
       { name: 'PC', value: formatHex(this.PC) },
