@@ -4,7 +4,11 @@ v-dialog(v-model='dialog' max-width='600px')
     v-card-title
       span.headline 레지스터 {{ name }} 수정
     v-card-text
-      v-text-field.mt-5(v-model="registerValue" label="레지스터 값 입력" placeholder="값을 입력해주세요")
+      v-text-field.mt-5(
+        v-model="registerValue"
+        label="레지스터 값 입력"
+        placeholder="값을 입력해주세요"
+        @keydown.enter="complete")
       .code 저장되는 값:  {{ valuePreview }}
     v-card-actions
       v-spacer
@@ -62,6 +66,8 @@ export default class RegisterEditDialog extends Vue {
   }
 
   complete() {
+    if (!this.isNumber) return
+
     const name = this.name
     const value = Number(this.registerValue) >>> 0
     const payload = { name, value }
