@@ -10,11 +10,13 @@ class Memory {
   programMEM: Uint8Array
   dataMEM: Uint8Array
   stackMEM: Uint8Array
+  changedData: Record<number, boolean>
 
   constructor() {
     this.programMEM = new Uint8Array({ length: 0x100000 })
     this.dataMEM = new Uint8Array({ length: 0x100000 })
     this.stackMEM = new Uint8Array({ length: 0x100000 })
+    this.changedData = {}
   }
 
   setByte(address: number, value: number) {
@@ -72,6 +74,8 @@ class Memory {
       for (let i = 0; i < _size; i++) {
         pM[offset + (_size - i - 1)] = view.getUint8(i)
       }
+
+      this.changedData[address] = true
     }
 
     return 0
@@ -81,6 +85,7 @@ class Memory {
     this.programMEM = new Uint8Array({ length: 0x100000 })
     this.dataMEM = new Uint8Array({ length: 0x100000 })
     this.stackMEM = new Uint8Array({ length: 0x100000 })
+    this.changedData = {}
   }
 
   view(start: number, end: number) {
@@ -101,6 +106,10 @@ class Memory {
       stdout.printDebug(`| ${address.toString(16).padStart(8, '0')} | ${word.toString(16).padStart(9, '0')} |`)
     })
     stdout.printDebug('------------------------')
+  }
+
+  flushChangedData() {
+    this.changedData = {}
   }
 }
 export const memory = new Memory()

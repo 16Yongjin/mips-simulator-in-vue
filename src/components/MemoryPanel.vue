@@ -1,19 +1,20 @@
 <template lang="pug">
 v-row.h-50.ma-0
   v-col.h-100.pa-0.mr-3
-    v-card.card.rounded-xl.mb-5(elevation="4")
+    v-card.card.rounded-xl.mb-5(elevation="4" ref="Card")
       v-card-title.card-title 데이터
-      v-card-text.code.card-text
-        .d-flex(v-for="(word, i) in dataMemory()" :key="i")
-          div(v-if="i === 2" style="height: 4px;")
-          div.pr-2 [{{ word.address.toString(16) }}]
-          div 0x{{ formatHex(word.word) }}({{word.word >> 0}})
+      v-card-text.code.card-text(ref="dataMemory")
+        v-virtual-scroll(:items='items' :height='panelHeight' item-height='24')
+          template(v-slot:default='{ item: address }')
+            .d-flex(:class="{ changed: dataChanged[address]}")
+              div.pr-2 [{{ address.toString(16) }}]
+              div 0x{{ formatHex(getDataMemory(address)) }}({{getDataMemory(address) >> 0}})
 
   v-col.h-100.pa-0.ml-3
     v-card.card.rounded-xl.mb-5(elevation="4")
       v-card-title.card-title 스택
       v-card-text.code.card-text.stack-data
-        .d-flex(v-for="(word, i) in stackMemory()" :key="i")
+        .d-flex(v-for="(word, i) in stackMemory()" :key="i" :class="{ changed: dataChanged[word.address]}")
           div.pr-2 [{{ word.address.toString(16) }}]
           div 0x{{ formatHex(word.word) }}({{word.word >> 0}})
 </template>
@@ -25,12 +26,25 @@ import { memory } from '@/simulator/memory'
 import { register } from '@/simulator/register'
 import { Prop } from 'vue-property-decorator'
 
+const addressList = Array.from({ length: 10000 }).map(
+  (_, i) => 0x10000000 + 4 * i
+)
+
 @Component({ name: 'MemoryPanel' })
 export default class MemoryPanel extends Vue {
   @Prop(Number)
   dataCount!: number
 
+  @Prop(Object)
+  changedMemory!: Record<number, boolean>
+
+  dataChanged = memory.changedData as Record<number, boolean>
+
   register = register
+
+  items = addressList
+
+  panelHeight = 300
 
   dataMemory() {
     const words = []
@@ -41,6 +55,11 @@ export default class MemoryPanel extends Vue {
     }
 
     return words
+  }
+
+  getDataMemory(address: number) {
+    const word = memory.getWord(address)
+    return word
   }
 
   stackMemory() {
@@ -61,6 +80,20 @@ export default class MemoryPanel extends Vue {
 
   formatHex(number: number) {
     return number.toString(16).padStart(8, '0')
+  }
+
+  updatePanelHeight() {
+    const panel = this.$refs.dataMemory as Element
+    this.panelHeight = panel?.clientHeight || 300
+  }
+
+  mounted() {
+    this.updatePanelHeight()
+    window.addEventListener('resize', this.updatePanelHeight.bind(this))
+  }
+
+  destroyed() {
+    window.removeEventListener('resize', this.updatePanelHeight.bind(this))
   }
 }
 </script>

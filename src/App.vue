@@ -12,9 +12,12 @@
             @openFile="openFile"
             @write="onUserWrite"
           )
+
           register-panel(:registerChanged="registerChanged" @registerEdit="onRegisterEdit")
+
           v-col.h-100.d-flex.flex-column(cols="6")
             memory-panel(:dataCount="dataCount" :key="Math.random()")
+
             console-panel(v-model="consoleInput" @consoleEnter="onConsoleInput")
 
         input.hidden(type="file" ref="file" @change="onFile")
@@ -92,12 +95,15 @@ export default class Instruction extends Vue {
     const breakPoint = this.breakPoints[this.register.PC]
     if (breakPoint) return this.showBreakPoint()
 
+    memory.flushChangedData()
     register.saveState()
+
     stepProgram()
     this.registerChanged = register.compareState()
   }
 
   go() {
+    memory.flushChangedData()
     register.saveState()
 
     while (true) {
@@ -114,12 +120,14 @@ export default class Instruction extends Vue {
   }
 
   continueStep() {
+    memory.flushChangedData()
     register.saveState()
     stepProgram()
     this.registerChanged = register.compareState()
   }
 
   continueGo(address: number) {
+    memory.flushChangedData()
     register.saveState()
 
     while (true) {
@@ -228,6 +236,7 @@ export default class Instruction extends Vue {
 
     this.breakPoints = {}
     this.registerChanged = {}
+    memory.flushChangedData()
   }
 
   async onConsoleInput() {
