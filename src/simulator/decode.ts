@@ -50,7 +50,7 @@ const OPCODE_STR = [
 ]
 
 const FUNCT_STR = [
-  'sll', '', 'srl', 'sra', '', '', '', '', 'jr', '', '', '', 'syscall', '', '', '', '', 'mfhi', '', 'mflo', '', '', '', '', '', 'mul', '', '', '', '', '', '', 'add', '', 'sub', '', 'and', 'or', 'xor', 'nor', '', '', 'slt', '', '', '', '', ''
+  'sll', '', 'srl', 'sra', '', '', '', '', 'jr', '', '', '', 'syscall', '', '', '', '', 'mfhi', '', 'mflo', '', '', '', '', 'mul', '', '', '', '', '', '', '', 'add', '', 'sub', '', 'and', 'or', 'xor', 'nor', '', '', 'slt', '', '', '', '', ''
 ]
 
 export function decode(word: number) {
@@ -67,36 +67,40 @@ export function decode(word: number) {
   const rsStr = REGISTER_STR[rs]
   const rtStr = REGISTER_STR[rt]
   const rdStr = REGISTER_STR[rd]
+  console.log(funct, opStr)
+  console.log(FUNCT_STR.indexOf('mul'))
 
   if (opcode === OPCODE.R_FORMAT) {
     switch (funct) {
       case FUNCT.SLL: case FUNCT.SRL: case FUNCT.SRA:
-        return `${opStr} ${rdStr} ${rtStr} ${sh}`
+        return `${opStr} ${rdStr}, ${rtStr}, ${sh}`
       case FUNCT.JR:
         return `${opStr} ${rsStr}`
       case FUNCT.SYSCALL:
         return 'syscall'
       case FUNCT.MFHI: case FUNCT.MFLO:
         return `${opStr} ${rdStr}`
+      case FUNCT.MUL:
+        return `${opStr} ${rsStr}, ${rtStr}`
       default:
-        return `${opStr} ${rdStr} ${rsStr} ${rtStr}`
+        return `${opStr} ${rdStr}, ${rsStr}, ${rtStr}`
     }
   } else {
     switch (opcode) {
       case OPCODE.J: case OPCODE.JAL:
         return `${opStr} 0x${target.toString(16)}`
       case OPCODE.BLTZ:
-        return `${opStr} ${rsStr} ${immediate}`
+        return `${opStr} ${rsStr}, ${immediate}`
       case OPCODE.BEQ: case OPCODE.BNE:
-        return `${opStr} ${rsStr} ${rtStr} ${immediate}`
+        return `${opStr} ${rsStr}, ${rtStr}, ${immediate}`
       case OPCODE.ADDI: case OPCODE.ADDIU: case OPCODE.SLTI: case OPCODE.SLTIU:
-        return `${opStr} ${rtStr} ${rsStr} ${immediate}`
+        return `${opStr} ${rtStr}, ${rsStr}, ${immediate}`
       case OPCODE.ANDI: case OPCODE.ORI: case OPCODE.XORI:
-        return `${opStr} ${rtStr} ${rsStr} ${immediate}`
+        return `${opStr} ${rtStr}, ${rsStr}, ${immediate}`
       case OPCODE.LUI:
-        return `${opStr} ${rtStr} ${immediate}`
+        return `${opStr} ${rtStr}, ${immediate}`
       case OPCODE.LW: case OPCODE.SW: case OPCODE.LB: case OPCODE.SB: case OPCODE.LBU:
-        return `${opStr} ${rtStr} ${immediate}(${rsStr})`
+        return `${opStr} ${rtStr}, ${immediate}(${rsStr})`
       default:
         return `Unknown Instruction 0x${word.toString(16)}`
     }

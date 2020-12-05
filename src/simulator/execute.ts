@@ -61,8 +61,8 @@ export const mflo = (rd: number) => {
 export const mul = (rs: number, rt: number) => {
   // {HI, LO} ← R[$rs] * R[$rt]
   const result = R[rs] * R[rt]
-  register.HI = result >> 32 >>> 0
-  register.LO = (result << 32) >> 32 >>> 0
+  register.HI = Math.floor(result / 4294967296)
+  register.LO = (result & 0xFFFFFFFF) >>> 0
   return 0
 }
 

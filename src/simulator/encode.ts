@@ -1,6 +1,6 @@
 const preprocess = (str: string) => str
-  .replace(',', ' ')
-  .replace(/\s{2,}/, ' ')
+  .replace(/,/g, ' ')
+  .replace(/\s{2,}/g, ' ')
   .toLowerCase()
   .trim()
 
@@ -188,7 +188,7 @@ export const encode = (str: string) => {
     return word
   }
 
-  const extraRFormatRegex = /^(mul|div|add|sub|and|or|xor|nor|slt) (\$\w+) (\$\w+) (\$\w+)$/
+  const extraRFormatRegex = /^(div|add|sub|and|or|xor|nor|slt) (\$\w+) (\$\w+) (\$\w+)$/
   const res5 = string.match(extraRFormatRegex)
   if (res5) {
     const [_, name, rdStr, rsStr, rtStr] = res5
@@ -269,10 +269,22 @@ export const encode = (str: string) => {
     return word
   }
 
+  const mulRegex = /^(mul) (\$\w+) (\$\w+)$/
+  const res12 = string.match(mulRegex)
+  if (res12) {
+    const [_, name, rsStr, rtStr] = res12
+    const opcode = getOpcode(name)
+    const funct = getFunct(name)
+    const rs = getRs(rsStr)
+    const rt = getRt(rtStr)
+    const word = combine(opcode, funct, rt, rs)
+    return word
+  }
+
   return null
 }
 
-/**
+/*
 const tester = (input: string, output: number) => {
   const res = encode(input)
   if (res !== output) {
@@ -336,4 +348,4 @@ tester('ori $v0 $zero 10', 0x3402000a)
 tester('syscall', 0x0000000c)
 tester('add $v0 $a0 $a1', 0x00851020)
 tester('jr $ra', 0x03e00008)
- */
+*/

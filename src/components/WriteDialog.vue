@@ -41,17 +41,17 @@ export default class InstructionWriteDialog extends Vue {
 
   encode = encode
 
-  code = `lui $t2 4096
-lw $s0 0($t2)
-lw $s1 4($t2)
-lw $s2 8($t2)
-lw $s3 12($t2)
-lw $s4 16($t2)
-add $t0 $s1 $s2
-add $t1 $s3 $s4
-sub $s0 $t0 $t1
-sw $s0 0($t2)
-ori $v0 $zero 10
+  code = `lui $t2, 4096
+lw $s0, 0($t2)
+lw $s1, 4($t2)
+lw $s2, 8($t2)
+lw $s3, 12($t2)
+lw $s4, 16($t2)
+add $t0, $s1, $s2
+add $t1, $s3, $s4
+sub $s0, $t0, $t1
+sw $s0, 0($t2)
+ori $v0, $zero, 10
 syscall`
 
   dataMemory = `0x00000000
