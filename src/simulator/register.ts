@@ -50,6 +50,10 @@ class Register {
   }
 
   setByName(name: string, value: number) {
+    if (name === 'PC') return this.jump(value)
+    if (name === 'HI') return (this.HI = value)
+    if (name === 'LO') return (this.LO = value)
+
     const index = REGISTER_STR.indexOf(name)
     this.set(index, value)
   }

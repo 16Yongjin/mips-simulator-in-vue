@@ -2,11 +2,11 @@
 v-dialog(v-model='dialog' max-width='600px')
   v-card
     v-card-title
-      span.headline 레지스터 {{ name }} 수정
+      span.headline {{ target }} {{ name }} 수정
     v-card-text
       v-text-field.mt-5(
-        v-model="registerValue"
-        label="레지스터 값 입력"
+        v-model="textValue"
+        :label="`${target} 값 입력`"
         placeholder="값을 입력해주세요"
         @keydown.enter="complete")
       .code 저장되는 값:  {{ valuePreview }}
@@ -23,8 +23,11 @@ import Vue from 'vue'
 import Component from 'vue-class-component'
 import { Prop, Watch } from 'vue-property-decorator'
 
-@Component({ name: 'RegisterEditDialog' })
-export default class RegisterEditDialog extends Vue {
+@Component({ name: 'EditDialog' })
+export default class EditDialog extends Vue {
+  @Prop(String)
+  target!: string
+
   @Prop(Boolean)
   value!: boolean
 
@@ -34,7 +37,7 @@ export default class RegisterEditDialog extends Vue {
   @Prop(String)
   currentValue!: string
 
-  registerValue = ''
+  textValue = ''
 
   get dialog() {
     return this.value
@@ -45,20 +48,20 @@ export default class RegisterEditDialog extends Vue {
   }
 
   get isNumber() {
-    const value = Number(this.registerValue)
-    return this.registerValue && Number.isSafeInteger(value)
+    const value = Number(this.textValue)
+    return this.textValue && Number.isSafeInteger(value)
   }
 
   get valuePreview() {
-    const value = Number(this.registerValue)
-    return this.registerValue && Number.isSafeInteger(value)
+    const value = Number(this.textValue)
+    return this.textValue && Number.isSafeInteger(value)
       ? `0x${this.formatHex(value >>> 0)}`
       : 'NaN'
   }
 
   @Watch('value')
   onValueChanged() {
-    if (this.value) this.registerValue = this.currentValue
+    if (this.value) this.textValue = this.currentValue
   }
 
   close() {
@@ -69,7 +72,7 @@ export default class RegisterEditDialog extends Vue {
     if (!this.isNumber) return
 
     const name = this.name
-    const value = Number(this.registerValue) >>> 0
+    const value = Number(this.textValue) >>> 0
     const payload = { name, value }
     this.$emit('complete', payload)
     this.close()

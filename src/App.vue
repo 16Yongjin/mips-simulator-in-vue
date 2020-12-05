@@ -16,7 +16,7 @@
           register-panel(:registerChanged="registerChanged" @registerEdit="onRegisterEdit")
 
           v-col.h-100.d-flex.flex-column(cols="6")
-            memory-panel(:dataCount="dataCount" :key="Math.random()")
+            memory-panel(:dataCount="dataCount" :key="Math.random()" @memoryEdit="onMemoryEdit")
 
             console-panel(v-model="consoleInput" @consoleEnter="onConsoleInput")
 
@@ -174,6 +174,12 @@ export default class Instruction extends Vue {
     this.register.saveState()
     this.register.setByName(name, value)
     this.registerChanged = this.register.compareState()
+  }
+
+  onMemoryEdit({ name: address, value }: { name: string; value: number }) {
+    memory.flushChangedData()
+    memory.setWord(Number(address), value)
+    this.$forceUpdate()
   }
 
   readUserInstruction(words: number[], data: number[]) {

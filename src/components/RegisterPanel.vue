@@ -7,7 +7,8 @@ v-col.h-100(cols="2")
         .d-flex.reg(:class="{ changed: registerChanged[reg.name]}" @click="selectRegister(reg)")
           div.w-100 {{ reg.name }}
           div.w-100 {{ reg.value }}
-  register-edit-dialog(
+  edit-dialog(
+    target="레지스터"
     v-model="editDialog"
     :name="selectedRegisterName"
     :currentValue="selectedRegisterValue"
@@ -20,9 +21,9 @@ import Vue from 'vue'
 import Component from 'vue-class-component'
 import { register } from '@/simulator/register'
 import { Prop } from 'vue-property-decorator'
-import RegisterEditDialog from '@/components/RegisterEditDialog.vue'
+import EditDialog from '@/components/EditDialog.vue'
 
-@Component({ name: 'RegisterPanel', components: { RegisterEditDialog } })
+@Component({ name: 'RegisterPanel', components: { EditDialog } })
 export default class RegisterPanel extends Vue {
   @Prop(Object)
   registerChanged!: Record<string, boolean>

@@ -6,7 +6,7 @@ v-row.h-50.ma-0
       v-card-text.code.card-text(ref="dataMemory")
         v-virtual-scroll(:items='items' :height='panelHeight' item-height='24')
           template(v-slot:default='{ item: address }')
-            .d-flex(:class="{ changed: dataChanged[address]}")
+            .d-flex.mem(:class="{ changed: dataChanged[address]}" @click="selectMemory(address)")
               div.pr-2 [{{ address.toString(16) }}]
               div 0x{{ formatHex(getDataMemory(address)) }}({{getDataMemory(address) >> 0}})
 
@@ -17,6 +17,14 @@ v-row.h-50.ma-0
         .d-flex(v-for="(word, i) in stackMemory()" :key="i" :class="{ changed: dataChanged[word.address]}")
           div.pr-2 [{{ word.address.toString(16) }}]
           div 0x{{ formatHex(word.word) }}({{word.word >> 0}})
+
+  edit-dialog(
+    target="메모리"
+    v-model="editDialog"
+    :name="selectedAddress"
+    :currentValue="selectedAddressValue"
+    @close="editDialog = false"
+    @complete="completeEdit")
 </template>
 
 <script lang="ts">
@@ -25,12 +33,13 @@ import Component from 'vue-class-component'
 import { memory } from '@/simulator/memory'
 import { register } from '@/simulator/register'
 import { Prop } from 'vue-property-decorator'
+import EditDialog from '@/components/EditDialog.vue'
 
 const addressList = Array.from({ length: 10000 }).map(
   (_, i) => 0x10000000 + 4 * i
 )
 
-@Component({ name: 'MemoryPanel' })
+@Component({ name: 'MemoryPanel', components: { EditDialog } })
 export default class MemoryPanel extends Vue {
   @Prop(Number)
   dataCount!: number
@@ -45,6 +54,12 @@ export default class MemoryPanel extends Vue {
   items = addressList
 
   panelHeight = 300
+
+  editDialog = false
+
+  selectedAddress = ''
+
+  selectedAddressValue = ''
 
   dataMemory() {
     const words = []
@@ -87,6 +102,19 @@ export default class MemoryPanel extends Vue {
     this.panelHeight = panel?.clientHeight || 300
   }
 
+  selectMemory(address: number) {
+    this.selectedAddress = `0x${this.formatHex(address)}`
+    this.selectedAddressValue = `0x${this.formatHex(
+      this.getDataMemory(address)
+    )}`
+    this.editDialog = true
+  }
+
+  completeEdit(value: object) {
+    console.log('memory edit', value)
+    this.$emit('memoryEdit', value)
+  }
+
   mounted() {
     this.updatePanelHeight()
     window.addEventListener('resize', this.updatePanelHeight.bind(this))
@@ -97,3 +125,14 @@ export default class MemoryPanel extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.mem {
+  cursor: pointer;
+
+  &:hover {
+    background: rgba($color: #fff, $alpha: 0.1) !important;
+    border-radius: 4px;
+  }
+}
+</style>
