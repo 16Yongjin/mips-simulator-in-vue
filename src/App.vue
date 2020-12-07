@@ -385,6 +385,7 @@ export default class Instruction extends Vue {
   margin: 3rem;
   padding: 1rem;
   background: rgba($color: #000000, $alpha: 0.5) !important;
+  backdrop-filter: blur(40px);
 }
 
 .header {

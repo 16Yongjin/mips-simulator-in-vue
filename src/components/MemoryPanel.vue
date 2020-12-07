@@ -99,7 +99,7 @@ export default class MemoryPanel extends Vue {
 
   updatePanelHeight() {
     const panel = this.$refs.dataMemory as Element
-    this.panelHeight = panel?.clientHeight || 300
+    this.panelHeight = panel?.clientHeight - 24 || 300
   }
 
   selectMemory(address: number) {
