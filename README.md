@@ -10,9 +10,3 @@
 - TypeScript
 - Pug
 - SCSS
-
-## To do
-
-- UI로 레지스터 설정
-- 데이터 메모리 변화 관측
-- 컴포넌트 분리
