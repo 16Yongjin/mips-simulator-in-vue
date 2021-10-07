@@ -4,6 +4,8 @@
 
 링크: https://mips.surge.sh
 
+블로그: https://yongj.in/development/mips-simulator/
+
 ## 기술스택
 
 - Vue
